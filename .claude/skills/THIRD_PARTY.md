@@ -23,7 +23,7 @@ To update one, clone the repository at the new commit, review the diff (scripts,
   - `nano-banana-image-generator`: Gemini (`GEMINI_API_KEY`).
   - `invisible-threads`: Anthropic and Gemini.
   - `x-posting`: getlate.dev.
-  - `motion-design`: 21st.dev (`API_KEY_21ST`), api.svgl.app and Mixkit.
+  - `claude-motion-design`: 21st.dev (`API_KEY_21ST`), api.svgl.app and Mixkit.
 - The motion-graphics skill's reference videos (`assets/references/*.mp4`) are committed on purpose. Its gate verifies their SHA-256 hashes before a build. `.gitignore` allows `*.mp4` under `.claude/skills/` only.
 ## Local changes to upstream
 
