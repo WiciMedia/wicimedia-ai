@@ -229,3 +229,9 @@ __marimo__/
 *.aac
 *.flac
 *.ogg
+
+# Reference videos that vendored skills need (motion-graphics verifies their hashes)
+!.claude/skills/**/*.mp4
+
+# Node
+node_modules/

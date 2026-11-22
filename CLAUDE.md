@@ -10,7 +10,7 @@ AI-powered video and content production for WiciMedia, made with Claude Code and
 ## Environment
 
 - Use the cloud environment **`wicimedia-ai`**, not Default. It allows the Hugging Face hosts, and its setup script installs everything below. If the tools are missing, the session is probably on Default.
-- **Python video libraries** are in a venv at `/opt/video-env` (moviepy 2.2, faster-whisper, arabic-reshaper, python-bidi). Run them with `/opt/video-env/bin/python -I`.
+- **Python video libraries** are in a venv at `/opt/video-env` (moviepy 2.2, faster-whisper, arabic-reshaper, python-bidi, numpy, playwright 1.63, yt-dlp). Run them with `/opt/video-env/bin/python -I`.
   - `av` is pinned `<16`. av 16+ breaks faster-whisper (`metadata_errors` TypeError).
   - Do not pip-install moviepy into the system Python. It downgrades Pillow below 12, which breaks other installed skills.
 - **Whisper model**: `large-v3-turbo` in `/opt/whisper-models`. It runs on CPU int8 at about 0.7× real time. Downloading it needs `HF_HUB_DISABLE_XET=1`.
@@ -39,6 +39,32 @@ These rules come from testing. Breaking them produces broken letters.
 
 - Higgsfield MCP covers video, image, voice/TTS, music, SFX, lipsync, upscale and reframe. Follow its server instructions, and check `models_explore` for model options.
 - For prompts, use the `video-prompt-builder` skill for new scenes and `seedance-footage-vfx` for transforming existing footage.
+
+## Installed skills
+
+Third-party skills are vendored in `.claude/skills/`. `.claude/skills/THIRD_PARTY.md` lists each source, its pinned commit and the review notes. Never update them by pulling blindly: review the diff first.
+
+**Ideas and content**
+
+- YouTube agent: `yt-script`, `yt-package`, `yt-seo`, `yt-shorts`, `yt-chapters`, `yt-edit`, `yt-retention`, `yt-plan`, `yt-audit`, `yt-viral`, `yt-comment`.
+- `youtube`: an all-in-one YouTube strategist.
+- `youtube-script-writer`.
+- content-os: 35 writing, social and video skills, such as `short-form-video`, `video-caption-creation`, `hook-and-headline-writing` and `youtube-title-creator`.
+
+**Motion and directing**
+
+- `studio/claude-motion/` is a complete Remotion project (claude-motion). It carries its own skills (`motion-design`, `sound-design`, `review-loop`, `web-sims`) that apply when working inside that folder. `npm run studio`, `still`, `draft`, `render`, `sfx` and `sheet` are run there.
+- `motion-design` (claude-motion-design): HTML plus Playwright plus ffmpeg, no Remotion.
+- `remotion-motion-graphics` (claude-remotion-skill).
+- remotion-motion-graphics-skill: `motion-graphics`, `cinematic-camera`, `terminal-inserts`, `article-highlights`. These ask about the format and background before rendering, and support transparent backgrounds.
+
+Most of these skills were written for English. Write Arabic on-screen text through Remotion/HTML with an Arabic font (Cairo, Tajawal and so on) and `dir="rtl"`, then check frames as usual.
+
+## Remotion
+
+- Every Remotion render must use the preinstalled browser, because Remotion cannot download its own here. In `studio/claude-motion` this is already set up through `remotion.config.ts`: run with `REMOTION_BROWSER=/opt/pw-browsers/chromium`. In any other Remotion project, add `--browser-executable=/opt/pw-browsers/chromium_headless_shell` to `remotion render` and `remotion still`. Both paths were tested.
+- New Remotion projects install their packages from npm, which is reachable.
+- **License:** Remotion is free for individuals and for-profit companies with up to 3 employees. Larger companies need a Remotion company license. Tell the user before relying on Remotion for client work if this may apply.
 
 ## Files and storage
 
