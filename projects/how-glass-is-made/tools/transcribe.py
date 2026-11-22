@@ -4,7 +4,7 @@ m = WhisperModel("large-v3-turbo", device="cpu", compute_type="int8", download_r
 out = {}
 for i in range(1, 6):
     p = os.path.join(sys.argv[1], f"vo{i}.mp3")
-    segs, info = m.transcribe(p, language="en", word_timestamps=True, beam_size=5, vad_filter=False)
+    segs, info = m.transcribe(p, language=(sys.argv[2] if len(sys.argv)>2 else "en"), word_timestamps=True, beam_size=5, vad_filter=False)
     words = []; text = []
     for s in segs:
         text.append(s.text.strip())

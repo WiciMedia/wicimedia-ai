@@ -2,7 +2,8 @@
 
 A 61-second narrated explainer in a paper cut-out infographic style, 1920 × 1080, 30 fps. Everything is drawn in JavaScript on one canvas: the illustrations, labels, subtitles and sound effects.
 
-- Live page: https://claude.ai/artifact/5etrR86CntFJyizteaCdpG
+- Live page (English): https://claude.ai/artifact/5etrR86CntFJyizteaCdpG
+- Live page (Arabic): https://claude.ai/artifact/XG7SmYszekhGDtEMtkrKCz
 - Storyboard: https://claude.ai/artifact/EKSYPRk79ediKj8FcUKN86
 
 ## Files
@@ -12,9 +13,13 @@ A 61-second narrated explainer in a paper cut-out infographic style, 1920 × 108
 | `how-glass-is-made.html` | The player page (artifact source). Loads `narration.mp3` next to it, or `window.__NARR_DATA` if set. |
 | `storyboard.html` | Stage 1 storyboard with the five rendered frames. |
 | `how-glass-is-made.srt` | English subtitles, timed to the narration. |
-| `arabic-script.md` | Arabic narration script (Modern Standard Arabic) for the Arabic version. |
-| `tools/transcribe.py` | Whisper word timings for `vo1.mp3` … `vo5.mp3`. |
-| `tools/build-narration.sh` | Places the five narration clips on the 61 s timeline. |
+| `how-glass-is-made-ar.html` | Arabic page, generated from the English one by `tools/make-arabic.py`. Do not edit it by hand. |
+| `how-glass-is-made-ar.srt` | Arabic subtitles, from the script wording with Whisper timings. |
+| `arabic-script.md` | Arabic narration script (Modern Standard Arabic) that was recorded in ElevenLabs. |
+| `tools/transcribe.py` | Whisper word timings for `vo1.mp3` … `vo5.mp3` (second argument: `en` or `ar`). |
+| `tools/build-narration.sh` | Places the five English narration clips on the 61 s timeline. |
+| `tools/build-narration-ar.sh` | Places the five Arabic clips on the 61.7 s timeline and lowers them 6 dB. |
+| `tools/make-arabic.py` | Builds the Arabic page: mirrored layout, Arabic fonts and strings, Arabic timeline. |
 | `tools/render-mp4.js` | Renders the final MP4 (H.264 CRF 18 + AAC) from the page. |
 
 Media is not committed. The narration MP3, the rendered MP4s and the narration source clips live on Drive or with the user.
@@ -32,10 +37,24 @@ Media is not committed. The narration MP3, the rendered MP4s and the narration s
 
 The constants live in `how-glass-is-made.html`: `SCN`, `PANS`, `WIPE`, `VO_PLACE`, `SPEECH` and `CAPS`. Each scene's beat times are inside its `sceneX` function.
 
+## Arabic version
+
+The engine draws right to left when `CFG.mirror` is on. The whole world (scenes, camera pans, foreground sheets, wipe and progress strip) is mirrored. Every string is counter-flipped so it reads correctly, and Arabic text is never letter-spaced. Subtitles are drawn unmirrored.
+
+The Arabic narration has its own timing. Rather than retiming every beat, each scene gets a time warp (`WARPS`): pairs of [Arabic time, English choreography time] anchored on matching words, such as "رمل السيليكا" ↔ "Silica sand" and "مئوية" ↔ "Celsius". The sound-effect cues follow the same warps.
+
+Amiri sets the headlines and Cairo the labels and subtitles. Amiri places stacked harakat too high, so the Amiri strings avoid damma, fatha and stacked marks, while Cairo text keeps full diacritics.
+
+To change the Arabic version, edit `how-glass-is-made.html` or `tools/make-arabic.py`, then regenerate:
+
+```bash
+python3 -I tools/make-arabic.py how-glass-is-made.html how-glass-is-made-ar.html
+```
+
 ## Rebuild
 
 ```bash
-/opt/video-env/bin/python -I tools/transcribe.py <dir with vo1.mp3 … vo5.mp3>
+/opt/video-env/bin/python -I tools/transcribe.py <dir with vo1.mp3 … vo5.mp3> en
 ```
 
 ```bash
