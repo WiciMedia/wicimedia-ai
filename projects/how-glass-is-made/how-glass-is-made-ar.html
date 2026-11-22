@@ -92,8 +92,8 @@ h1{font-family:var(--f-display);font-weight:600;font-size:clamp(26px,3.6vw,40px)
    ENGINE — deterministic, time-based paper renderer
    Design space is 1920×1080; every draw call works in it.
    ========================================================= */
-const DW = 1920, DH = 1080;
 const CFG={lang:'ar',mirror:true}; /*CFG*/
+const VERT=!!CFG.vert, DW=VERT?1080:1920, DH=VERT?1920:1080;
 const MIRROR=!!CFG.mirror, SHX=MIRROR?-1:1, RTL_RE=/[\u0600-\u06FF]/; let FLIP=false;
 
 /* ---------- color ---------- */
@@ -236,13 +236,15 @@ function txt(g,str,x,y,o={}){ const font=o.font||FONT.sans(500,22),ar=RTL_RE.tes
   for(const sg of parseChem(str)){ g.font=sg.sub?subF(font):font; const dy=sg.sub?sz*.2:0; if(tr){ for(const ch of sg.t){ g.fillText(ch,cx,y+dy); cx+=g.measureText(ch).width+tr; } } else { g.fillText(sg.t,cx,y+dy); cx+=g.measureText(sg.t).width; } }
   g.restore(); }
 /* headline: kicker + words rising out of a paper slot */
-function headline(ctx,kicker,title,t,o={}){ const x=o.x??140,y=o.y??242,sz=o.size??90,font=FONT.serif(600,sz);
+let CUR_SCENE=0; const HQ=[];
+function headline(ctx,kicker,title,t,o={}){ if(VERT&&!o.native){ HQ.push({i:CUR_SCENE,kicker,title,t}); return; }
+  const x=o.x??140,y=o.y??242,sz=o.size??90,font=FONT.serif(600,sz),mw=o.maxW??1e9,lh=sz*1.12; ctx.save(); if(o.alpha!=null) ctx.globalAlpha*=o.alpha;
   const ka=R(t,0,.45); if(ka>0){ pc('kbar',()=>({pts:rough(rrect(0,0,34,6,1),31,.5),color:C.terra,blur:3})).draw(ctx,x,y-sz-22,{elev:.3,alpha:ka,sx:ka});
-    txt(ctx,kicker,x+46,y-sz-12,{font:FONT.sans(800,19),track:3.2,color:C.terra,alpha:ka}); }
-  MC.font=font; const sp=MC.measureText(' ').width; let cx=x;
-  title.split(' ').forEach((w,i)=>{ const ww=MC.measureText(w).width, p=R(t,.12+i*.07,.6,Ez.out5);
-    if(p>0){ ctx.save(); ctx.beginPath(); ctx.rect(cx-12,y-sz*1.3,ww+24,sz*1.75); ctx.clip(); txt(ctx,w,cx,y+(1-p)*sz*1.05,{font,color:C.char}); ctx.restore(); }
-    cx+=ww+sp; }); }
+    txt(ctx,kicker,x+46,y-sz-12,{font:FONT.sans(800,o.ksize??19),track:3.2,color:C.terra,alpha:ka}); }
+  MC.font=font; const sp=MC.measureText(' ').width; let cx=x,cy=y;
+  title.split(' ').forEach((w,i)=>{ const ww=MC.measureText(w).width, p=R(t,.12+i*.07,.6,Ez.out5); if(cx>x&&cx+ww-x>mw){ cx=x; cy+=lh; }
+    if(p>0){ ctx.save(); ctx.beginPath(); ctx.rect(cx-12,cy-sz*1.3,ww+24,sz*1.75); ctx.clip(); txt(ctx,w,cx,cy+(1-p)*sz*1.05,{font,color:C.char}); ctx.restore(); }
+    cx+=ww+sp; }); ctx.restore(); }
 /* paper tag with crisp text on top */
 function tag(ctx,str,x,y,o={}){ const sz=o.size??17,font=o.font??FONT.sans(800,sz),tr=o.track??1.8,w=Math.max(o.minW||0,measure(str,font,tr))+(o.padX??14)*2,h=o.h??Math.round(sz*1.95),bg=o.bg??C.card;
   const p=pc('tag:'+(o.key||str)+':'+bg+':'+sz,()=>({pts:rough(rrect(-w/2,-h/2,w,h,o.r??3),seedOf(str+bg),.8),color:bg,blur:6}));
@@ -741,21 +743,40 @@ SCN.forEach((S,i)=>{ S.warp=mkWarp(WARPS&&WARPS[i]); S.inv=mkWarp(WARPS&&WARPS[i
 const lt=(S,g)=>S.warp?S.warp(g-S.start):g-S.start;
 const FGC=[[C.blue,C.mustard],[C.sage,C.terra],[C.blue,C.mustard],[C.terra,C.sage]];
 function passes(ctx,g){ PANS.forEach(([a,b],n)=>{ if(g<=a||g>=b) return; const p=Ez.io3((g-a)/(b-a));
-  pc('fgA'+n,()=>({pts:rough(rrect(-130,-420,260,840,16),900+n,1.8),color:FGC[n][0],blur:26,decor:g2=>{ g2.fillStyle=rgba(C.card,.18); g2.fillRect(-130,-420,40,840); }})).draw(ctx,lerp(2350,-480,p),n===2?lerp(220,60,p):140,{rot:.09,elev:3.4});
-  disc('fgB'+n,215,FGC[n][1],26).draw(ctx,lerp(2950,-760,p),n===2?lerp(1120,960,p):1040,{elev:3.4}); }); }
-const SW=980;
+  pc('fgA'+n,()=>({pts:rough(rrect(-130,-420,260,840,16),900+n,1.8),color:FGC[n][0],blur:26,decor:g2=>{ g2.fillStyle=rgba(C.card,.18); g2.fillRect(-130,-420,40,840); }})).draw(ctx,lerp(DW*1.22,-DW*.25,p),n===2?lerp(DH*.2,DH*.06,p):DH*.13,{rot:.09,elev:3.4});
+  disc('fgB'+n,215,FGC[n][1],26).draw(ctx,lerp(DW*1.54,-DW*.4,p),n===2?lerp(DH*1.04,DH*.89,p):DH*.96,{elev:3.4}); }); }
+const SW=Math.round(DW*.51);
 function wipeSheet(){ return pc('wipe',()=>{ const pts=[]; const r=rnd(77); for(let y=-80;y<=DH+80;y+=16) pts.push([(r()-.5)*26+Math.sin(y/90)*8,y]); pts.push([SW,DH+80],[SW,-80]);
   return {pts:rough(pts,905,1.2),color:C.mustard,blur:30,decor:g=>{ g.fillStyle=rgba(C.terra,.9); g.fillRect(SW-120,-80,120,DH+160); g.fillStyle=rgba(C.card,.16); g.fillRect(0,-80,70,DH+160); }}; }); }
 let SUBS_ON=true;
+function capLines(str,font,mw){ if(measure(str,font)<=mw) return [str]; const w=str.split(' '); let best=null; for(let k=1;k<w.length;k++){ const a=w.slice(0,k).join(' '),b=w.slice(k).join(' '),m=Math.max(measure(a,font),measure(b,font)); if(!best||m<best.m) best={m,l:[a,b]}; } return best.l; }
 function drawSubs(ctx,g){ const c=CAPS.find(c=>g>=c[0]-.05&&g<c[1]+.12); if(!c) return; const a=clamp((g-c[0]+.05)/.16)*clamp((c[1]+.12-g)/.16); if(a<=0) return;
-  const font=FONT.sans(600,34),w=measure(c[2],font)+64,i=CAPS.indexOf(c);
-  pc('cap'+i,()=>({pts:rough(rrect(-w/2,-31,w,62,8),5000+i,.9),color:C.char,blur:10})).draw(ctx,DW/2,990+(1-a)*6,{elev:1,alpha:a*.94});
-  txt(ctx,c[2],DW/2,1002+(1-a)*6,{font,color:C.card,align:'center',alpha:a}); }
-function renderFrame(ctx,g,W,o={}){ const k=W/DW; ctx.setTransform(k,0,0,k,0,0); drawBackdrop(ctx);
+  const sz=VERT?46:34,font=FONT.sans(600,sz),i=CAPS.indexOf(c),lines=VERT?capLines(c[2],font,900):[c[2]],lh=sz*1.32,w=Math.max(...lines.map(l=>measure(l,font)))+64,h=lines.length*lh+sz*.75,cy=VERT?1500:990;
+  pc('cap'+i+(VERT?'v':''),()=>({pts:rough(rrect(-w/2,-h/2,w,h,9),5000+i,.9),color:C.char,blur:10})).draw(ctx,DW/2,cy+(1-a)*6,{elev:1,alpha:a*.94});
+  lines.forEach((l,k)=>txt(ctx,l,DW/2,cy-h/2+sz*.38+lh*(k+.5)+sz*.36+(1-a)*6,{font,color:C.card,align:'center',alpha:a})); }
+/* 9:16 director camera: focus keyframes per scene on the choreography clock, [t, focusX, zoom] */
+const VK=[[[-9,450,1.4],[2.8,450,1.4],[3.5,1460,1.4],[4.7,1460,1.4],[5.4,1070,1.25],[7.4,1070,1.25],[8.4,925,.68],[30,925,.68]],
+ [[-9,470,1.4],[7.1,470,1.4],[8.5,1430,1.4],[10.3,1430,1.4],[11.1,985,.62],[30,985,.62]],
+ [[-9,835,1.4],[2.6,835,1.4],[3.3,1560,1.4],[6.6,1560,1.4],[7.2,560,1.4],[8.4,560,1.4],[9.0,1560,1.4],[30,1560,1.4]],
+ [[-9,560,1.4],[1.2,560,1.4],[3.0,1000,1.4],[3.5,1450,1.4],[5.6,1450,1.4],[30,1450,1.4]],
+ [[-9,560,1.4],[1.0,560,1.4],[2.2,900,1.4],[2.8,1555,1.4],[4.5,1555,1.4],[5.4,970,.62],[30,970,.62]],
+ [[-9,1265,1.1],[5.8,1265,1.1],[6.4,420,1.3],[8.2,420,1.3],[9.0,965,.62],[30,965,.62]]];
+const VFY=575, VSY=960;
+function vkAt(i,t){ const K=VK[i]; for(let k=1;k<K.length;k++){ if(t<=K[k][0]){ const [t0,x0,z0]=K[k-1],[t1,x1,z1]=K[k],e=Ez.ioS(clamp((t-t0)/(t1-t0))); return [lerp(x0,x1,e),lerp(z0,z1,e)]; } } const L=K[K.length-1]; return [L[1],L[2]]; }
+function vcamAt(g){ const at=(i,gg)=>{ const S=SCN[i],[fx,z]=vkAt(i,lt(S,gg)); return {x:S.wx+fx,y:S.wy+VFY,z}; };
+  for(const [a,b,i,j] of PANS){ if(g>=a&&g<=b){ const A=at(i,a),B=at(j,b),p=(g-a)/(b-a),e=Ez.io3(p); return {x:lerp(A.x,B.x,e),y:lerp(A.y,B.y,e),z:lerp(A.z,B.z,e)*(1-.12*Math.sin(Math.PI*p))}; } }
+  let i=0; for(let k=0;k<PANS.length;k++) if(g>PANS[k][1]) i=k+1; return at(i,Math.min(g,CAM_END)); }
+function drawChromeV(ctx,si,prog){
+  pc('hdrTab',()=>({pts:rough(rrect(-11,-11,22,22,2),11,.8),color:C.mustard,blur:4})).draw(ctx,81,66,{elev:.5,rot:.06});
+  txt(ctx,'كيف يُصنع الزجاج',108,74,{font:FONT.sans(800,22),track:3.4});
+  txt(ctx,si<0?'المقدمة':String(si+1).padStart(2,'0')+'  /  05',1010,74,{font:FONT.sans(700,22),track:2.2,align:'right',color:rgba(C.char,.75)});
+  const y=126,x0=70,x1=1010; ctx.fillStyle=rgba(C.char,.18); ctx.fillRect(x0,y-1,x1-x0,2); ctx.fillStyle=C.terra; ctx.fillRect(x0,y-2,(x1-x0)*prog,4);
+  for(let i=0;i<5;i++){ const nx=x0+i*(x1-x0)/4,on=i<=si; disc(on?'pnOnS':'pnOffS',6,on?C.terra:C.card,3).draw(ctx,nx,y,{elev:.4}); } }
+function renderFrame(ctx,g,W,o={}){ if(VERT) return renderFrameV(ctx,g,W,o); const k=W/DW; ctx.setTransform(k,0,0,k,0,0); drawBackdrop(ctx);
   const cam=camAt(Math.min(g,CAM_END)), subs=o.subs??SUBS_ON;
   ctx.save(); if(MIRROR){ ctx.translate(DW,0); ctx.scale(-1,1); FLIP=true; }
   const world=()=>{ ctx.save(); ctx.translate(DW/2,DH/2); ctx.scale(cam.z,cam.z); ctx.translate(-DW/2-cam.x,-DH/2-cam.y);
-    for(let i=0;i<5;i++){ const S=SCN[i]; if(g<S.start-1.4||g>S.start+S.dur+1.4) continue; if(Math.abs(cam.x-S.wx)>2100) continue; ctx.save(); ctx.translate(S.wx,S.wy); S.draw(ctx,lt(S,g)); ctx.restore(); }
+    for(let i=0;i<5;i++){ const S=SCN[i]; if(g<S.start-1.4||g>S.start+S.dur+1.4) continue; if(Math.abs(cam.x-S.wx)>2100) continue; ctx.save(); ctx.translate(S.wx,S.wy); CUR_SCENE=i; S.draw(ctx,lt(S,g)); ctx.restore(); }
     ctx.restore(); };
   if(g<WIPE[0]){ world(); passes(ctx,g); }
   else { const p=Ez.io3(clamp((g-WIPE[0])/(WIPE[1]-WIPE[0]))), lead=lerp(DW+160,-SW-180,p);
@@ -763,6 +784,26 @@ function renderFrame(ctx,g,W,o={}){ const k=W/DW; ctx.setTransform(k,0,0,k,0,0);
     if(lead+SW<DW+40){ ctx.save(); ctx.beginPath(); ctx.rect(Math.max(0,lead+SW-60),0,DW,DH); ctx.clip(); SCN[5].draw(ctx,lt(SCN[5],g)); ctx.restore(); }
     if(lead<DW+120&&lead+SW>-120) wipeSheet().draw(ctx,lead,0,{elev:3.2,rot:-.012}); }
   drawChrome(ctx,sceneIdx(g),clamp(g/DUR),subs);
+  ctx.restore(); FLIP=false;
+  if(subs) drawSubs(ctx,g); }
+function renderFrameV(ctx,g,W,o={}){ const k=W/DW; ctx.setTransform(k,0,0,k,0,0); drawBackdrop(ctx); HQ.length=0;
+  const cam=vcamAt(g), subs=o.subs??SUBS_ON, hw=DW/2/cam.z;
+  ctx.save(); if(MIRROR){ ctx.translate(DW,0); ctx.scale(-1,1); FLIP=true; }
+  const world=()=>{ ctx.save(); ctx.translate(DW/2,VSY); ctx.scale(cam.z,cam.z); ctx.translate(-cam.x,-cam.y);
+    for(let i=0;i<5;i++){ const S=SCN[i]; if(g<S.start-1.4||g>S.start+S.dur+1.4) continue; if(cam.x+hw<S.wx-150||cam.x-hw>S.wx+2070) continue; ctx.save(); ctx.translate(S.wx,S.wy); CUR_SCENE=i; S.draw(ctx,lt(S,g)); ctx.restore(); }
+    ctx.restore(); };
+  const s5=()=>{ ctx.save(); ctx.translate(DW/2,VSY); const [fx,z]=vkAt(5,lt(SCN[5],g)); ctx.scale(z,z); ctx.translate(-fx,-VFY); CUR_SCENE=5; SCN[5].draw(ctx,lt(SCN[5],g)); ctx.restore(); };
+  if(g<WIPE[0]){ world(); passes(ctx,g); }
+  else { const p=Ez.io3(clamp((g-WIPE[0])/(WIPE[1]-WIPE[0]))), lead=lerp(DW+160,-SW-180,p);
+    if(lead>-40){ ctx.save(); ctx.beginPath(); ctx.rect(0,0,lead+40,DH); ctx.clip(); world(); ctx.restore(); }
+    if(lead+SW<DW+40){ ctx.save(); ctx.beginPath(); ctx.rect(Math.max(0,lead+SW-60),0,DW,DH); ctx.clip(); s5(); ctx.restore(); }
+    if(lead<DW+120&&lead+SW>-120) wipeSheet().draw(ctx,lead,0,{elev:3.2,rot:-.012}); }
+  // native headline: the current scene's, fading out as the next one arrives
+  let ci=0; for(let k=0;k<SCN.length;k++) if(g>=SCN[k].start) ci=k;
+  const nx=SCN[ci+1], ha=nx?clamp((nx.start-g)/.65):1, h=HQ.find(q=>q.i===ci);
+  if(h&&ha>0){ ctx.save(); const bg=ctx.createLinearGradient(0,150,0,430); bg.addColorStop(0,rgba(C.cream,.92)); bg.addColorStop(.75,rgba(C.cream,.8)); bg.addColorStop(1,rgba(C.cream,0)); ctx.fillStyle=bg; ctx.fillRect(0,150,DW,280); ctx.restore();
+    headline(ctx,h.kicker,h.title,h.t,{native:true,x:70,y:285,size:72,maxW:930,ksize:22,alpha:ha}); }
+  drawChromeV(ctx,sceneIdx(g),clamp(g/DUR));
   ctx.restore(); FLIP=false;
   if(subs) drawSubs(ctx,g); }
 const pad=n=>String(n).padStart(2,'0');
@@ -891,7 +932,7 @@ const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d');
 const P={t:0,playing:false,t0:0,p0:0,acBase:0,q:1,ema:12,lastAdj:0,dirty:true,ready:false,started:false};
 const fmt=s=>{ const m=Math.floor(s/60),r=s-m*60; return m+':'+(r<10?'0':'')+r.toFixed(1); };
-function sizeCanvas(){ const w=cv.clientWidth||960, W=Math.max(480,Math.min(1920,Math.round(w*(window.devicePixelRatio||1)*P.q))); if(cv.width!==W){ cv.width=W; cv.height=Math.round(W*9/16); P.dirty=true; } }
+function sizeCanvas(){ const w=cv.clientWidth||960, W=Math.max(360,Math.min(DW,Math.round(w*(window.devicePixelRatio||1)*P.q))); if(cv.width!==W){ cv.width=W; cv.height=Math.round(W*DH/DW); P.dirty=true; } }
 function ui(){ $('seek').value=Math.round(P.t*1000); $('time').textContent=fmt(P.t)+' / '+fmt(DUR); $('playLabel').textContent=P.playing?'إيقاف':'تشغيل';
   $('playIcon').setAttribute('d',P.playing?'M6 4h4v16H6zM14 4h4v16h-4z':'M6 4l15 8-15 8z'); $('bigplay').hidden=P.started||P.playing||!P.ready;
   const si=sceneIdx(P.t); document.querySelectorAll('#marks button').forEach((b,i)=>b.classList.toggle('on',i===si+1)); }
@@ -931,8 +972,8 @@ function isMp4(buf){ const b=new Uint8Array(buf,0,Math.min(64,buf.byteLength)); 
 const wantAudio=()=>SFX_ON||(VO_ON&&!!NARR);
 async function exportWithMB(MB){
   const {Output,Mp4OutputFormat,BufferTarget,CanvasSource,AudioBufferSource,QUALITY_HIGH,getFirstEncodableVideoCodec,getFirstEncodableAudioCodec}=MB;
-  const vcodec=await getFirstEncodableVideoCodec(['avc','hevc','vp9','av1'],{width:1920,height:1080}); if(!vcodec) return null;
-  const ec=document.createElement('canvas'); ec.width=1920; ec.height=1080; const ex=ec.getContext('2d');
+  const vcodec=await getFirstEncodableVideoCodec(['avc','hevc','vp9','av1'],{width:DW,height:DH}); if(!vcodec) return null;
+  const ec=document.createElement('canvas'); ec.width=DW; ec.height=DH; const ex=ec.getContext('2d');
   const output=new Output({format:new Mp4OutputFormat({fastStart:'in-memory'}),target:new BufferTarget()});
   const vs=new CanvasSource(ec,{codec:vcodec,bitrate:window.__glassBitrate||QUALITY_HIGH,keyFrameInterval:2}); output.addVideoTrack(vs,{frameRate:FPS});
   let as=null,acodec=null,abuf=null;
@@ -940,7 +981,7 @@ async function exportWithMB(MB){
   await output.start(); if(as) await as.add(abuf);
   const N=Math.round(DUR*FPS); say('جارٍ رسم الإطارات…');
   for(let i=0;i<N;i++){ if(EXP.cancel){ try{ await output.cancel(); }catch(e){} return 'cancelled'; }
-    renderFrame(ex,i/FPS,1920); await vs.add(i/FPS,1/FPS); if(i%3===0){ prog((i+1)/N*.97); say(`رسم الإطار ${i+1} من ${N}…`); await yieldUI(); } }
+    renderFrame(ex,i/FPS,DW); await vs.add(i/FPS,1/FPS); if(i%3===0){ prog((i+1)/N*.97); say(`رسم الإطار ${i+1} من ${N}…`); await yieldUI(); } }
   say('جارٍ إنهاء ملف MP4…'); await output.finalize(); const buf=output.target.buffer;
   if(!buf||!isMp4(buf)) throw new Error('The encoder did not produce a valid MP4 file.');
   let dur=null; try{ if(MB.Input&&MB.BufferSource&&MB.ALL_FORMATS){ const inp=new MB.Input({formats:MB.ALL_FORMATS,source:new MB.BufferSource(buf)}); dur=await inp.computeDuration(); } }catch(e){}
@@ -950,13 +991,13 @@ async function exportWithRecorder(){
   if(!window.MediaRecorder) throw new Error('This browser has neither WebCodecs nor MediaRecorder.');
   const types=['video/mp4;codecs=avc1.640028,mp4a.40.2','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=avc1,opus','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
   const type=types.find(t=>MediaRecorder.isTypeSupported(t)); if(!type) throw new Error('No recordable video format is available.');
-  const ec=document.createElement('canvas'); ec.width=1920; ec.height=1080; const ex=ec.getContext('2d'); renderFrame(ex,0,1920);
+  const ec=document.createElement('canvas'); ec.width=DW; ec.height=DH; const ex=ec.getContext('2d'); renderFrame(ex,0,DW);
   const stream=ec.captureStream(FPS); const N=[]; let base=0;
   const ac=wantAudio()?ensureAC():null; if(ac){ await ac.resume(); const dest=ac.createMediaStreamDestination(); base=ac.currentTime+.15; if(SFX_ON){ const m=makeMaster(ac,dest); scheduleDuck(m.duck.gain,0,base); schedule(ac,m,0,base,N); } startNarr(ac,dest,0,base,N); stream.addTrack(dest.stream.getAudioTracks()[0]); }
   const rec=new MediaRecorder(stream,{mimeType:type,videoBitsPerSecond:12e6}); const chunks=[]; rec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
   const stopped=new Promise(r=>rec.onstop=r); rec.start(250); say(`Recording in real time (${Math.round(DUR)} s)…`);
   const clock=()=>ac?ac.currentTime-base:(performance.now()-t0)/1000, t0=performance.now()+150;
-  await new Promise(res=>{ const f=()=>{ const g=clock(); if(EXP.cancel||g>=DUR){ renderFrame(ex,DUR,1920); res(); return; } if(g>=0){ renderFrame(ex,g,1920); prog(g/DUR*.97); } requestAnimationFrame(f); }; f(); });
+  await new Promise(res=>{ const f=()=>{ const g=clock(); if(EXP.cancel||g>=DUR){ renderFrame(ex,DUR,DW); res(); return; } if(g>=0){ renderFrame(ex,g,DW); prog(g/DUR*.97); } requestAnimationFrame(f); }; f(); });
   await new Promise(r=>setTimeout(r,200)); rec.stop(); await stopped; for(const s of N){ try{ s.stop(); }catch(e){} }
   if(EXP.cancel) return 'cancelled';
   const mp4=type.startsWith('video/mp4'); const blob=new Blob(chunks,{type:type.split(';')[0]});
@@ -971,7 +1012,7 @@ async function exportVideo(){ if(EXP.busy) return; pause(); EXP.busy=true; EXP.c
   if(res==='cancelled'){ say('أُلغي التصدير.'); prog(0); return; }
   if(!res){ say('Export failed: '+(err&&err.message||'unknown error')); return; }
   EXP.result=res; prog(1); const mb=(res.blob.size/1048576).toFixed(1);
-  say(res.ext==='mp4'?'ملف MP4 جاهز.':'Saved as WebM, not MP4.'); $('download').textContent=`تحميل الفيديو (${res.label} · ${mb} MB)`; $('expInfo').textContent=`1920 × 1080 · ${FPS} fps · ${res.detail}${SUBS_ON?' · subtitles burned in':''}`; $('dlRow').hidden=false; }
+  say(res.ext==='mp4'?'ملف MP4 جاهز.':'Saved as WebM, not MP4.'); $('download').textContent=`تحميل الفيديو (${res.label} · ${mb} MB)`; $('expInfo').textContent=`${DW} × ${DH} · ${FPS} fps · ${res.detail}${SUBS_ON?' · subtitles burned in':''}`; $('dlRow').hidden=false; }
 async function saveFile(name,data,altName){ let dl=null; try{ dl=DL?await DL:null; }catch(e){ dl=null; }
   if(dl){ try{ await dl.save({filename:altName||name,data}); return 'Saved '+(altName||name)+'.'; }catch(e){ return e&&e.code==='declined'?'رُفض التحميل.':'This view cannot save files ('+((e&&(e.code||e.message))||'unavailable')+'). Open the standalone HTML in Chrome.'; } }
   const blob=data instanceof Blob?data:new Blob([data],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),60000); return 'Download started: '+name+'.'; }
