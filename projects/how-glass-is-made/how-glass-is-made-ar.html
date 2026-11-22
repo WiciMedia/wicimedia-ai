@@ -751,6 +751,29 @@ function drawCover(ctx,W,o={}){ const k=W/1080, bi=!!o.bilingual, sz=bi?CV.sz*.9
   if(!o.bg) tag(ctx,CV.b,540,1830+(bi?40:0),{center:true,size:26,bg:C.char,fg:C.card,elev:1});
   ctx.restore(); FLIP=false; }
 
+/* YouTube thumbnail 16:9: art from a supplied image on one side, title block on the other */
+function drawThumb(ctx,W,o={}){ const k=W/1920, im=o.bg, rtl=CFG.lang==='ar', iw=im.naturalWidth||im.width, ih=im.naturalHeight||im.height;
+  ctx.setTransform(k,0,0,k,0,0);
+  const sc=document.createElement('canvas'); sc.width=sc.height=8; const sg=sc.getContext('2d'); sg.drawImage(im,8,8,Math.round(iw*.4),Math.round(ih*.12),0,0,8,8);
+  const d=sg.getImageData(0,0,8,8).data; let r=0,g=0,b=0; for(let i=0;i<d.length;i+=4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; } const n=d.length/4;
+  ctx.fillStyle=`rgb(${r/n|0},${g/n|0},${b/n|0})`; ctx.fillRect(0,0,1920,1080); const pt=pats(ctx);
+  ctx.save(); ctx.globalAlpha=.3; ctx.fillStyle=pt.dark; ctx.fillRect(0,0,1920,1080); ctx.globalAlpha=.4; ctx.fillStyle=pt.light; ctx.fillRect(0,0,1920,1080); ctx.restore();
+  const [sx,sy,sw,sh]=o.crop||[0,Math.round(ih*.31),iw,ih-Math.round(ih*.31)], s=1080/sh, aw=sw*s, ax=rtl?0:1920-aw;
+  const ac=document.createElement('canvas'); ac.width=Math.round(aw*k); ac.height=Math.round(1080*k); const ag=ac.getContext('2d'); ag.drawImage(im,sx,sy,sw,sh,0,0,ac.width,ac.height);
+  ag.globalCompositeOperation='destination-in'; const fy=110*k;
+  const gy=ag.createLinearGradient(0,0,0,fy); gy.addColorStop(0,'rgba(0,0,0,0)'); gy.addColorStop(1,'rgba(0,0,0,1)'); ag.fillStyle=gy; ag.fillRect(0,0,ac.width,ac.height);
+  // the art sits on a torn-paper panel: rough inner edge, warm shadow, light exposed fibre edge
+  const ex=rtl?aw-24:ax+24, rr=rnd(4321), edge=[]; for(let y=-30;y<=1110;y+=10) edge.push([ex+noise1(y/70,77)*14+(rr()-.5)*7,y]);
+  const poly=rtl?[[-40,-30],...edge,[-40,1110]]:[[1960,-30],[1960,1110],...edge.slice().reverse()], tp=pathOf(poly);
+  const m=ctx.getTransform(),eff=Math.hypot(m.a,m.b);
+  ctx.save(); ctx.shadowColor='rgba(70,40,22,.38)'; ctx.shadowBlur=22*eff; ctx.shadowOffsetX=(rtl?8:-8)*eff; ctx.shadowOffsetY=6*eff; ctx.fillStyle=ctx.fillStyle; ctx.fill(tp); ctx.restore();
+  ctx.save(); ctx.clip(tp); ctx.drawImage(ac,ax,0,aw,1080); ctx.restore();
+  ctx.save(); ctx.strokeStyle='rgba(255,251,240,.7)'; ctx.lineWidth=3.5; ctx.beginPath(); edge.forEach(([x,y],i)=>i?ctx.lineTo(x+(rtl?-1:1),y):ctx.moveTo(x+(rtl?-1:1),y)); ctx.stroke(); ctx.restore();
+  const cx=rtl?aw+(1920-aw)/2-10:ax/2+10, sz=rtl?158:136, y0=rtl?470:455;
+  tag(ctx,CV.k,cx,y0-sz-70,{center:true,size:26,bg:C.terra,fg:C.card,elev:.8});
+  CV.t.forEach((l,i)=>txt(ctx,l,cx,y0+i*sz*1.08,{font:FONT.serif(600,sz),align:'center'}));
+  txt(ctx,CV.sub,cx,y0+sz*1.08+(rtl?128:122),{font:CV.subF.replace(/\d+px/,rtl?'66px':'74px'),align:'center',color:C.terraD}); }
+
 /* =========================================================
    TIMELINE · CAMERA · TRANSITIONS  (narration is the master clock)
    ========================================================= */
@@ -1062,7 +1085,7 @@ $('export').onclick=exportVideo; $('cancel').onclick=()=>{ EXP.cancel=true; say(
 /* =========================================================
    BOOT
    ========================================================= */
-window.__glass={renderFrame,renderAudioOffline,drawCover,DUR,FPS,CUES,SRT,narrReady:()=>!!NARR};
+window.__glass={renderFrame,renderAudioOffline,drawCover,drawThumb,DUR,FPS,CUES,SRT,narrReady:()=>!!NARR};
 async function boot(){ makeGrain(); buildMarks(); sizeCanvas(); ui();
   const narrP=loadNarration(window.__NARR_DATA||'narration.mp3');
   const faces=['700 90px Amiri','400 30px Amiri','700 54px Amiri','400 36px Amiri','700 150px Amiri','400 22px Cairo','500 22px Cairo','600 22px Cairo','600 34px Cairo','700 18px Cairo','800 18px Cairo','800 14px Cairo'];
