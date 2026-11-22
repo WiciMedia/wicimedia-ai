@@ -1,3 +1,8 @@
+---
+name: vellum-prep
+description: Convert a markdown manuscript (from OCR or writing) into a Vellum-ready Word document for book formatting.
+---
+
 # Vellum Prep
 
 Convert markdown manuscripts to Vellum-ready Word documents.

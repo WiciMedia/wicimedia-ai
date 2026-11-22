@@ -1,3 +1,8 @@
+---
+name: invisible-threads
+description: Find non-obvious thematic connections across a corpus of essays, articles or transcripts, with supporting quotes, for anthologies or editorial commentary.
+---
+
 # Invisible Threads Skill
 
 Discovers non-obvious thematic connections ("invisible threads") across a corpus of essays, articles, or transcripts.

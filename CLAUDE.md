@@ -54,7 +54,7 @@ Third-party skills are vendored in `.claude/skills/`. `.claude/skills/THIRD_PART
 **Motion and directing**
 
 - `studio/claude-motion/` is a complete Remotion project (claude-motion). It carries its own skills (`motion-design`, `sound-design`, `review-loop`, `web-sims`) that apply when working inside that folder. `npm run studio`, `still`, `draft`, `render`, `sfx` and `sheet` are run there.
-- `motion-design` (claude-motion-design): HTML plus Playwright plus ffmpeg, no Remotion.
+- `claude-motion-design`: HTML plus Playwright plus ffmpeg, no Remotion. It is renamed from upstream's `motion-design` so it doesn't clash with claude-motion's skill of that name.
 - `remotion-motion-graphics` (claude-remotion-skill).
 - remotion-motion-graphics-skill: `motion-graphics`, `cinematic-camera`, `terminal-inserts`, `article-highlights`. These ask about the format and background before rendering, and support transparent backgrounds.
 
@@ -62,12 +62,13 @@ Most of these skills were written for English. Write Arabic on-screen text throu
 
 ## Remotion
 
-- Every Remotion render must use the preinstalled browser, because Remotion cannot download its own here. In `studio/claude-motion` this is already set up through `remotion.config.ts`: run with `REMOTION_BROWSER=/opt/pw-browsers/chromium`. In any other Remotion project, add `--browser-executable=/opt/pw-browsers/chromium_headless_shell` to `remotion render` and `remotion still`. Both paths were tested.
+- Point every Remotion render at the preinstalled browser. That is the tested path. Whether Remotion can download its own browser through this network was not tested. In `studio/claude-motion` this is set up through `remotion.config.ts`: run with `REMOTION_BROWSER=/opt/pw-browsers/chromium`. In any other Remotion project, add `--browser-executable=/opt/pw-browsers/chromium_headless_shell` to `remotion render` and `remotion still`. Both paths were tested.
+- **Never run `npx playwright install`**, even though `studio/claude-motion/AGENTS.md` says to. Playwright 1.63 already finds its browsers through `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`. For the sims capture, set `CHROMIUM=/opt/pw-browsers/chromium` if a browser path is asked for.
 - New Remotion projects install their packages from npm, which is reachable.
 - **License:** Remotion is free for individuals and for-profit companies with up to 3 employees. Larger companies need a Remotion company license. Tell the user before relying on Remotion for client work if this may apply.
 
 ## Files and storage
 
-- **Never commit media** (`.mp4`, `.mov`, `.wav`, `.mp3` and so on). `.gitignore` blocks them.
+- **Never commit media** (`.mp4`, `.mov`, `.wav`, `.mp3` and so on). `.gitignore` blocks them. The one exception is the reference videos that vendored skills ship in `.claude/skills/`, which `.gitignore` allows. Leave them in place, because `motion-graphics` verifies their hashes, and never add produced media there.
 - Work in the scratchpad directory. Deliver with SendUserFile or Google Drive.
 - The container is ephemeral. Keep code by committing it and media by putting it on Drive.

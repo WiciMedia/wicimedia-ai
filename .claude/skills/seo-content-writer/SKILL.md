@@ -1,3 +1,8 @@
+---
+name: seo-content-writer
+description: Write SEO-optimized articles that rank and read as human-written (hub pages, deep dives, refreshes), working from a research brief. Use after the seo-research skill.
+---
+
 # SEO Content Writer
 
 Write SEO-optimized content that ranks AND reads like a human wrote it. Use this skill AFTER completing research with `seo-research` skill.

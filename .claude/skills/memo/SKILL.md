@@ -1,3 +1,8 @@
+---
+name: memo
+description: Manage Apple Notes from the terminal with the memo CLI (macOS only).
+---
+
 # memo - Apple Notes CLI
 
 Manage Apple Notes from the terminal.

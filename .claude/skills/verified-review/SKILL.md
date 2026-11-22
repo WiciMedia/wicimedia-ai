@@ -1,3 +1,8 @@
+---
+name: verified-review
+description: Write structured, practical product or curriculum reviews from real families' podcast mentions or interviews.
+---
+
 # Verified Review Skill
 
 Write structured product/curriculum reviews from real OpenEd families. Reviews are practical, honest, and include enough detail that parents can decide if the tool is right for them.

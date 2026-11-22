@@ -1,3 +1,8 @@
+---
+name: day-in-the-life
+description: Write Day-in-the-Life blog posts from a podcast transcript or interview, showing how a specific family structures its (home)schooling in enough detail to picture it.
+---
+
 # Day-in-the-Life Blog Post Skill
 
 Write Day-in-the-Life homeschool blog posts that show how specific families structure their learning, with enough detail that readers can visualize themselves doing it.

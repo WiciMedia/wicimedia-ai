@@ -1,3 +1,8 @@
+---
+name: seo-research
+description: Keyword research and SEO content planning before writing - find opportunities, validate topics, build a research brief or content calendar, and spot content that needs a refresh.
+---
+
 # SEO Research
 
 Strategic keyword research and content planning. Use this skill BEFORE writing to identify opportunities, validate topics, and create a research brief.
