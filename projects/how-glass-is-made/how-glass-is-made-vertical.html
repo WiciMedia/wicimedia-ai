@@ -713,6 +713,40 @@ function scene5(ctx,t){
 
 
 /* =========================================================
+   COVER — a 1080×1920 still for TikTok / Reels from the same paper kit
+   ========================================================= */
+const CV=CFG.lang==='ar'?{k:'شرح مصوّر في 60 ثانية',t:['كيف يصبح','الرمل زجاجًا؟'],b:'من حبّة رمل إلى قارورة',sz:150}:{k:'EXPLAINED IN 60 SECONDS',t:['How sand','becomes glass'],b:'FROM SAND TO BOTTLE, IN ONE MINUTE',sz:138};
+function drawCover(ctx,W){ const k=W/1080; ctx.setTransform(k,0,0,k,0,0);
+  ctx.fillStyle=C.cream; ctx.fillRect(0,0,1080,1920); const pt=pats(ctx);
+  ctx.save(); ctx.globalAlpha=.6; ctx.fillStyle=pt.dark; ctx.fillRect(0,0,1080,1920); ctx.globalAlpha=.75; ctx.fillStyle=pt.light; ctx.fillRect(0,0,1080,1920); ctx.restore();
+  const vg=ctx.createRadialGradient(540,1050,480,540,960,1250); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(92,60,34,.22)'); ctx.fillStyle=vg; ctx.fillRect(0,0,1080,1920);
+  ctx.save(); if(MIRROR){ ctx.translate(1080,0); ctx.scale(-1,1); FLIP=true; }
+  disc('cvHalo',455,mix(C.cream,C.mustard,.36),26).draw(ctx,690,1235,{elev:.8});
+  disc('cvHalo2',300,mix(C.cream,C.terra,.22),18).draw(ctx,720,1330,{elev:.5});
+  [[585,1730,430,.35],[735,1745,560,.62],[880,1730,400,.9]].forEach(([x,y,len,ph],i)=>{ ctx.save(); ctx.translate(x,y); ctx.rotate(-Math.PI/2); flame(ctx,'CV'+i,0,0,len,1,ph,1); ctx.restore(); });
+  // molten glass pours from the sand into the bottle's mouth
+  const P=[[300,1470],[150,860],[700,520],[700,790]], top=[], bot=[], N=60;
+  for(let i=0;i<=N;i++){ const t=i/N,p=bez(P[0],P[1],P[2],P[3],t),d=bezD(P[0],P[1],P[2],P[3],t),L=Math.hypot(d[0],d[1])||1,nx=-d[1]/L,ny=d[0]/L,w=lerp(74,30,sstep(t))/2; top.push([p[0]-nx*w,p[1]-ny*w]); bot.push([p[0]+nx*w,p[1]+ny*w]); }
+  const rp=pathOf(rough(top.concat(bot.reverse()),7171,1.2)), rg=ctx.createLinearGradient(300,1470,700,700);
+  rg.addColorStop(0,C.mustard); rg.addColorStop(.35,C.glow); rg.addColorStop(.7,'#D8774F'); rg.addColorStop(1,C.hot);
+  paperNow(ctx,rp,rg,{elev:1.2,edge:C.deep,tex:.6,blur:14});
+  ctx.save(); ctx.clip(rp); ctx.strokeStyle='rgba(255,246,220,.75)'; ctx.lineWidth=4; ctx.setLineDash([26,20]); ctx.beginPath(); for(let i=0;i<=N;i++){ const p=bez(P[0],P[1],P[2],P[3],i/N); i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]); } ctx.stroke(); ctx.restore();
+  for(let k2=0;k2<26;k2++){ const u=.05+hf(k2,71)*.5,p=bez(P[0],P[1],P[2],P[3],u),off=(hf(k2,72)-.5)*120,s=6+hf(k2,73)*8; ctx.save(); ctx.translate(p[0]+off,p[1]+(hf(k2,74)-.5)*80); ctx.rotate(k2); ctx.scale(s,s); ctx.fillStyle=u<.25?mix(C.mustard,C.kraft,hf(k2,75)):mix(C.glow,C.mustard,hf(k2,76)); ctx.fill(GRAINP[k2%12]); ctx.restore(); }
+  drawGlass(ctx,'bottle',700,1690,440,880,{lw:4,fill:'rgba(124,157,165,.24)',inner:(g,bb)=>{ const r=g.createRadialGradient(0,-330,20,0,-330,420); r.addColorStop(0,'rgba(255,240,205,.7)'); r.addColorStop(1,'rgba(255,240,205,0)'); g.fillStyle=r; g.fillRect(bb.x,bb.y,bb.w,bb.h);
+    const lv=-150; g.fillStyle=rgba(C.glow,.55); g.fillRect(bb.x,lv,bb.w,200); g.fillStyle=rgba(C.hot,.5); g.fillRect(bb.x,lv,bb.w,10); }});
+  for(let s=0;s<5;s++){ const sx=700+[-120,130,60,-60,150][s],sy=1690-[700,560,300,480,820][s],sc=[1.4,1,1.2,.8,.9][s]; ctx.save(); ctx.translate(sx,sy); ctx.scale(sc,sc); ctx.fillStyle=C.card; ctx.beginPath(); for(let j=0;j<8;j++){ const a=j*Math.PI/4,rr=j%2?5:22; ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); } ctx.closePath(); ctx.fill(); ctx.restore(); }
+  pc('cvD0',()=>({pts:rough(spline([[-330,0],[-250,-96],[-90,-170],[70,-146],[250,-74],[330,0],[0,12]],8),1031,2.2),color:mix(C.mustard,C.card,.45),blur:14,decor:speckDecor(mix(C.mustard,C.card,.45),1131)})).draw(ctx,330,1720,{elev:1});
+  pc('cvD1',()=>({pts:rough(spline([[-250,0],[-180,-80],[-40,-150],[100,-116],[220,-46],[256,0],[0,8]],8),1032,2),color:C.mustard,blur:14,decor:speckDecor(C.mustard,1132)})).draw(ctx,230,1720,{elev:1.2});
+  pc('cvD2',()=>({pts:rough(spline([[-210,0],[-140,-52],[0,-78],[130,-56],[220,0],[0,6]],8),1033,1.8),color:mix(C.kraft,C.mustard,.4),blur:12,decor:speckDecor(mix(C.kraft,C.mustard,.4),1133)})).draw(ctx,420,1730,{elev:1.3});
+  pc('cvBase',()=>({pts:rough(rrect(-560,0,1120,40,6),1034,1.4),color:C.char,blur:12})).draw(ctx,540,1728,{elev:1});
+  // title block
+  tag(ctx,CV.k,540,246,{center:true,size:24,bg:C.terra,fg:C.card,elev:.8});
+  CV.t.forEach((l,i)=>txt(ctx,l,540,420+i*CV.sz*1.08,{font:FONT.serif(600,CV.sz),align:'center'}));
+  pc('cvRule',()=>({pts:rough(rrect(-90,-5,180,10,3),1035,.6),color:C.mustard,blur:4})).draw(ctx,540,420+CV.sz*1.08+70,{elev:.5});
+  tag(ctx,CV.b,540,1830,{center:true,size:26,bg:C.char,fg:C.card,elev:1});
+  ctx.restore(); FLIP=false; }
+
+/* =========================================================
    TIMELINE · CAMERA · TRANSITIONS  (narration is the master clock)
    ========================================================= */
 const DUR=61, FPS=30;
@@ -1023,7 +1057,7 @@ $('export').onclick=exportVideo; $('cancel').onclick=()=>{ EXP.cancel=true; say(
 /* =========================================================
    BOOT
    ========================================================= */
-window.__glass={renderFrame,renderAudioOffline,DUR,FPS,CUES,SRT,narrReady:()=>!!NARR};
+window.__glass={renderFrame,renderAudioOffline,drawCover,DUR,FPS,CUES,SRT,narrReady:()=>!!NARR};
 async function boot(){ makeGrain(); buildMarks(); sizeCanvas(); ui();
   const narrP=loadNarration(window.__NARR_DATA||'narration.mp3');
   const faces=['600 90px Fraunces','700 54px Fraunces','500 30px Fraunces','500 36px Fraunces','700 150px Fraunces','400 22px Archivo','500 22px Archivo','600 22px Archivo','600 34px Archivo','700 18px Archivo','800 18px Archivo'];
