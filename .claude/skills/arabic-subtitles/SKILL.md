@@ -15,7 +15,7 @@ Work in the scratchpad directory, never in the repo: media files must not be com
 ## 0. Preflight
 
 ```bash
-ls /opt/video-env/bin/python /opt/whisper-models >/dev/null && fc-list | grep -qi cairo && echo ready
+ls /opt/video-env/bin/python >/dev/null && find /opt/whisper-models -name model.bin | grep -q . && fc-list | grep -qi cairo && echo ready
 ```
 
 If this fails, the session is not on the `wicimedia-ai` cloud environment (its setup script installs the venv, the Whisper model and the fonts). Tell the user, in Arabic, to start the session on that environment.
@@ -58,8 +58,10 @@ Use `--res 1080x1920` instead of `--video` when the video does not exist yet.
 
 ```bash
 ffmpeg -y -i input.mp4 -vf "ass=subs.ass:fontsdir=/usr/local/share/fonts/arabic" \
-  -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p -c:a copy -movflags +faststart output.mp4
+  -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart output.mp4
 ```
+
+Audio is re-encoded to AAC, because copying it fails for codecs MP4 does not accept (for example PCM from a `.mov`).
 
 Keep file names simple (no `:` `,` `'` or spaces), because they sit inside an ffmpeg filter argument.
 

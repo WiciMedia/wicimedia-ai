@@ -19,13 +19,23 @@ TIME_RE = re.compile(r"(\d+):(\d{2}):(\d{2})[,.](\d{1,3})")
 
 
 def probe_size(video: str):
+    """Displayed frame size: swaps width/height for 90/270-degree rotated video
+    (phone footage), because ffmpeg auto-rotates before the ass= filter."""
     out = subprocess.run(
         ["ffprobe", "-v", "error", "-select_streams", "v:0",
-         "-show_entries", "stream=width,height", "-of", "json", video],
+         "-show_entries", "stream=width,height:stream_tags=rotate:stream_side_data=rotation",
+         "-of", "json", video],
         capture_output=True, text=True, check=True,
     ).stdout
     s = json.loads(out)["streams"][0]
-    return int(s["width"]), int(s["height"])
+    w, h = int(s["width"]), int(s["height"])
+    rotation = s.get("tags", {}).get("rotate")
+    for sd in s.get("side_data_list", []):
+        if "rotation" in sd:
+            rotation = sd["rotation"]
+    if rotation is not None and int(float(rotation)) % 180 != 0:
+        w, h = h, w
+    return w, h
 
 
 def ass_time(srt_time: str) -> str:
@@ -60,7 +70,9 @@ def parse_srt(text: str):
 
 
 def escape(text: str) -> str:
-    return text.replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}")
+    # ASS has no escape for a backslash; swap it for a look-alike (U+29F5) so
+    # text like "C:\new" is not read as a \n line break.
+    return text.replace("\\", "\u29f5").replace("{", "\\{").replace("}", "\\}")
 
 
 def main() -> int:
@@ -82,6 +94,9 @@ def main() -> int:
     ap.add_argument("--box-opacity", type=float, default=0.6, help="0..1")
     ap.add_argument("--regular", action="store_true", help="regular weight instead of bold")
     args = ap.parse_args()
+
+    if not 0 <= args.box_opacity <= 1:
+        ap.error("--box-opacity must be between 0 and 1")
 
     if args.video:
         w, h = probe_size(args.video)
