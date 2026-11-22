@@ -58,6 +58,13 @@ Third-party skills are vendored in `.claude/skills/`. `.claude/skills/THIRD_PART
 - `remotion-motion-graphics` (claude-remotion-skill).
 - remotion-motion-graphics-skill: `motion-graphics`, `cinematic-camera`, `terminal-inserts`, `article-highlights`. These ask about the format and background before rendering, and support transparent backgrounds.
 
+**Video agent** (video-agent-skills)
+
+- `editing` is the entry point and routes to the others: `studio-setup`, `studio-script`, `short-editing`, `steal`, `broll`, `clips`, `short-translate`, `insta-audit`, `outliers`, `publish`, `codex-images`, `vox`. They work in a `video-agent/` folder at the project root.
+- In the cloud, run the `short-editing` engine with `CHROME_PATH=/opt/pw-browsers/chromium`. There is no whisper.cpp here, so word timings need `ELEVENLABS_API_KEY` (or a `whisper-cli` built and set as `WHISPER_CLI`).
+- Its captions are drawn in Chrome, not through ffmpeg. Arabic in this engine is untested: set an Arabic font in the style and check frames.
+- `insta-audit`, `outliers` and `publish` need Treg, a third-party service. `publish` posts to the user's accounts only after an explicit yes.
+
 Most of these skills were written for English. Write Arabic on-screen text through Remotion/HTML with an Arabic font (Cairo, Tajawal and so on) and `dir="rtl"`, then check frames as usual.
 
 ## Remotion

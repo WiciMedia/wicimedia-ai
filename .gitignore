@@ -233,5 +233,21 @@ __marimo__/
 # Reference videos that vendored skills need (motion-graphics verifies their hashes)
 !.claude/skills/**/*.mp4
 
+# short-editing (video-agent-skills): its engine code lives in lib/ (ignored above by the Python rules),
+# and its 5 bundled sound effects are mp3. Everything its setup generates stays out of git.
+!.claude/skills/short-editing/engine/lib/
+!.claude/skills/short-editing/assets/sfx/*.mp3
+.claude/skills/short-editing/.runtime/
+.claude/skills/short-editing/assets/music/*.mp3
+.claude/skills/short-editing/assets/icons/*.png
+.claude/skills/short-editing/assets/icons/glyph/
+
+# video-agent/ (the working folder of the video-agent-skills): keys and heavy files stay out of git
+video-agent/takes/
+video-agent/edits/**/assets/
+video-agent/edits/**/stills/
+video-agent/.tmp/
+video-agent/.env
+
 # Node
 node_modules/
