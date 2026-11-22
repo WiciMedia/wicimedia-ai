@@ -715,12 +715,13 @@ function scene5(ctx,t){
 /* =========================================================
    COVER — a 1080×1920 still for TikTok / Reels from the same paper kit
    ========================================================= */
-const CV=CFG.lang==='ar'?{k:'شرح مصوّر في 60 ثانية',t:['كيف يصبح','الرمل زجاجًا؟'],b:'من حبّة رمل إلى قارورة',sz:150}:{k:'EXPLAINED IN 60 SECONDS',t:['How sand','becomes glass'],b:'FROM SAND TO BOTTLE, IN ONE MINUTE',sz:138};
-function drawCover(ctx,W){ const k=W/1080; ctx.setTransform(k,0,0,k,0,0);
+const CV=CFG.lang==='ar'?{k:'شرح مصوّر في 60 ثانية',t:['كيف يصبح','الرمل زجاجًا؟'],b:'من حبّة رمل إلى قارورة',sz:150,sub:'How sand becomes glass',subF:'600 62px Fraunces, Georgia, serif'}:{k:'EXPLAINED IN 60 SECONDS',t:['How sand','becomes glass'],b:'FROM SAND TO BOTTLE, IN ONE MINUTE',sz:138,sub:'كيف يصبح الرمل زجاجًا؟',subF:'700 70px Amiri, serif'};
+function drawCover(ctx,W,o={}){ const k=W/1080, bi=!!o.bilingual, sz=bi?CV.sz*.92:CV.sz, dy=bi?85:0; ctx.setTransform(k,0,0,k,0,0);
   ctx.fillStyle=C.cream; ctx.fillRect(0,0,1080,1920); const pt=pats(ctx);
   ctx.save(); ctx.globalAlpha=.6; ctx.fillStyle=pt.dark; ctx.fillRect(0,0,1080,1920); ctx.globalAlpha=.75; ctx.fillStyle=pt.light; ctx.fillRect(0,0,1080,1920); ctx.restore();
   const vg=ctx.createRadialGradient(540,1050,480,540,960,1250); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(92,60,34,.22)'); ctx.fillStyle=vg; ctx.fillRect(0,0,1080,1920);
   ctx.save(); if(MIRROR){ ctx.translate(1080,0); ctx.scale(-1,1); FLIP=true; }
+  ctx.save(); ctx.translate(0,dy);
   disc('cvHalo',455,mix(C.cream,C.mustard,.36),26).draw(ctx,690,1235,{elev:.8});
   disc('cvHalo2',300,mix(C.cream,C.terra,.22),18).draw(ctx,720,1330,{elev:.5});
   [[585,1730,430,.35],[735,1745,560,.62],[880,1730,400,.9]].forEach(([x,y,len,ph],i)=>{ ctx.save(); ctx.translate(x,y); ctx.rotate(-Math.PI/2); flame(ctx,'CV'+i,0,0,len,1,ph,1); ctx.restore(); });
@@ -739,11 +740,13 @@ function drawCover(ctx,W){ const k=W/1080; ctx.setTransform(k,0,0,k,0,0);
   pc('cvD1',()=>({pts:rough(spline([[-250,0],[-180,-80],[-40,-150],[100,-116],[220,-46],[256,0],[0,8]],8),1032,2),color:C.mustard,blur:14,decor:speckDecor(C.mustard,1132)})).draw(ctx,230,1720,{elev:1.2});
   pc('cvD2',()=>({pts:rough(spline([[-210,0],[-140,-52],[0,-78],[130,-56],[220,0],[0,6]],8),1033,1.8),color:mix(C.kraft,C.mustard,.4),blur:12,decor:speckDecor(mix(C.kraft,C.mustard,.4),1133)})).draw(ctx,420,1730,{elev:1.3});
   pc('cvBase',()=>({pts:rough(rrect(-560,0,1120,40,6),1034,1.4),color:C.char,blur:12})).draw(ctx,540,1728,{elev:1});
+  ctx.restore();
   // title block
-  tag(ctx,CV.k,540,246,{center:true,size:24,bg:C.terra,fg:C.card,elev:.8});
-  CV.t.forEach((l,i)=>txt(ctx,l,540,420+i*CV.sz*1.08,{font:FONT.serif(600,CV.sz),align:'center'}));
-  pc('cvRule',()=>({pts:rough(rrect(-90,-5,180,10,3),1035,.6),color:C.mustard,blur:4})).draw(ctx,540,420+CV.sz*1.08+70,{elev:.5});
-  tag(ctx,CV.b,540,1830,{center:true,size:26,bg:C.char,fg:C.card,elev:1});
+  tag(ctx,CV.k,540,236,{center:true,size:24,bg:C.terra,fg:C.card,elev:.8});
+  CV.t.forEach((l,i)=>txt(ctx,l,540,405+i*sz*1.08,{font:FONT.serif(600,sz),align:'center'}));
+  if(bi) txt(ctx,CV.sub,540,405+sz*1.08+122,{font:CV.subF,align:'center',color:C.terraD});
+  pc('cvRule',()=>({pts:rough(rrect(-90,-5,180,10,3),1035,.6),color:C.mustard,blur:4})).draw(ctx,540,405+sz*1.08+(bi?186:70),{elev:.5});
+  tag(ctx,CV.b,540,1830+(bi?40:0),{center:true,size:26,bg:C.char,fg:C.card,elev:1});
   ctx.restore(); FLIP=false; }
 
 /* =========================================================
